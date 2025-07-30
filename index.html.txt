@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Interactivo de Actividades</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Enlace a la hoja de estilos externa -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <!-- Encabezado y Navegación -->
+        <header class="mb-8 text-center">
+            <img src="https://storage.googleapis.com/gemini-prod-us-west1-1p-405022-files/f314c44f-124b-4b2e-a579-2a9121703080" alt="Logo Navojoa al Siguiente Nivel" class="mx-auto mb-4 h-24">
+            <h1 class="text-3xl font-bold" style="color: var(--color-primary-maroon);">Reporte de Actividades</h1>
+            <div class="flex items-center justify-between mt-4 max-w-md mx-auto">
+                <div>
+                    <h2 id="current-month-year" class="text-xl font-semibold" style="color: var(--color-primary-maroon);"></h2>
+                    <p id="report-subheader" class="text-sm text-gray-500"></p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button id="prev-month-btn" class="nav-btn bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-3 rounded-lg transition"><i class="fas fa-chevron-left"></i></button>
+                    <button id="next-month-btn" class="nav-btn bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-3 rounded-lg transition"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+             <button id="return-current-btn" class="hidden mt-2 text-sm" style="color: var(--color-accent-gold);">Volver al mes actual</button>
+        </header>
+
+        <!-- Sección de Resumen -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="card p-6 flex flex-col items-center justify-center">
+                <h2 class="text-lg font-semibold mb-2" style="color: var(--color-primary-maroon);">Progreso Total</h2>
+                <div id="percentage-display" class="text-5xl font-bold" style="color: var(--color-accent-gold);">0%</div>
+            </div>
+            <div class="card p-6 md:col-span-2">
+                 <div class="grid grid-cols-3 gap-4 text-center">
+                    <div><p class="text-gray-500 text-sm">Total Actividades</p><p id="total-tasks" class="text-2xl font-bold" style="color: var(--color-primary-maroon);">0</p></div>
+                    <div><p class="text-gray-500 text-sm">Completadas</p><p id="completed-tasks" class="text-2xl font-bold text-green-600">0</p></div>
+                    <div><p class="text-gray-500 text-sm">Pendientes</p><p id="pending-tasks" class="text-2xl font-bold text-red-600">0</p></div>
+                </div>
+                <div class="mt-4"><div class="progress-bar-bg w-full h-4 rounded-full overflow-hidden"><div id="progress-bar" class="progress-bar-fill h-full rounded-full"></div></div></div>
+            </div>
+        </div>
+        
+        <!-- Lista de Actividades -->
+        <div id="task-list-container" class="card p-6">
+            <h3 class="text-xl font-semibold mb-4" style="color: var(--color-primary-maroon);">Checklist Mensual</h3>
+            <div id="task-list" class="space-y-3">
+                 <div id="empty-state" class="text-center py-8"><i class="fas fa-clipboard-list fa-3x text-gray-300"></i><p class="mt-4 text-gray-500">No hay actividades para este mes.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Añadir Sustento -->
+    <div id="sustento-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="card p-8 m-4 max-w-lg w-full">
+            <h3 class="text-xl font-semibold mb-4" style="color: var(--color-primary-maroon);">Añadir Enlace de Sustento</h3>
+            <p class="text-sm text-gray-600 mb-4">Pega la URL del documento, formulario o archivo de evidencia.</p>
+            <div>
+                <label for="sustento-url-input" class="block text-sm font-medium text-gray-700">Enlace (URL)</label>
+                <input type="url" id="sustento-url-input" placeholder="https://ejemplo.com/midocumento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-[var(--color-accent-gold)] focus:border-[var(--color-accent-gold)] sm:text-sm">
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="cancel-sustento-btn" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-md hover:bg-gray-300 transition">Cancelar</button>
+                <button id="save-sustento-btn" class="text-white font-semibold py-2 px-4 rounded-md transition" style="background-color: var(--color-primary-maroon);">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlace al archivo JavaScript externo -->
+    <script src="script.js"></script>
+</body>
+</html>
