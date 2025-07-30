@@ -1,0 +1,201 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // Referencias a elementos del DOM
+    const monthYearDisplay = document.getElementById('current-month-year');
+    const reportSubheader = document.getElementById('report-subheader');
+    const taskList = document.getElementById('task-list');
+    const taskListContainer = document.getElementById('task-list-container');
+    const prevMonthBtn = document.getElementById('prev-month-btn');
+    const nextMonthBtn = document.getElementById('next-month-btn');
+    const returnCurrentBtn = document.getElementById('return-current-btn');
+    
+    const percentageDisplay = document.getElementById('percentage-display');
+    const progressBar = document.getElementById('progress-bar');
+    const totalTasksDisplay = document.getElementById('total-tasks');
+    const completedTasksDisplay = document.getElementById('completed-tasks');
+    const pendingTasksDisplay = document.getElementById('pending-tasks');
+
+    // Referencias al Modal
+    const sustentoModal = document.getElementById('sustento-modal');
+    const sustentoUrlInput = document.getElementById('sustento-url-input');
+    const saveSustentoBtn = document.getElementById('save-sustento-btn');
+    const cancelSustentoBtn = document.getElementById('cancel-sustento-btn');
+
+    // --- LISTA DE ACTIVIDADES PREDETERMINADAS ---
+    const PREDETERMINED_TASKS = [
+        { text: "Actividad Predeterminada 1", responsable: "Equipo A" },
+        { text: "Actividad Predeterminada 2", responsable: "Equipo B" },
+        { text: "Actividad Predeterminada 3", responsable: "Equipo A" },
+        { text: "Actividad Predeterminada 4", responsable: "Equipo C" },
+        { text: "Actividad Predeterminada 5", responsable: "Equipo B" },
+    ];
+
+    let viewDate = new Date();
+    let tasks = [];
+    let currentTaskIdForSustento = null;
+    const months_es = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    const loadTasksForDate = (date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const storageKey = `tasks_${year}_${month}`;
+        let storedTasks = localStorage.getItem(storageKey);
+
+        if (!storedTasks) {
+            tasks = PREDETERMINED_TASKS.map((task, index) => ({
+                id: Date.now() + index,
+                text: task.text,
+                responsable: task.responsable,
+                completed: false,
+                sustento: null
+            }));
+            saveTasks();
+        } else {
+            tasks = JSON.parse(storedTasks);
+        }
+    };
+
+    const saveTasks = () => {
+        const year = viewDate.getFullYear();
+        const month = viewDate.getMonth();
+        const storageKey = `tasks_${year}_${month}`;
+        localStorage.setItem(storageKey, JSON.stringify(tasks));
+    };
+
+    const render = () => {
+        loadTasksForDate(viewDate);
+        
+        const now = new Date();
+        const isCurrentMonth = viewDate.getMonth() === now.getMonth() && viewDate.getFullYear() === now.getFullYear();
+
+        // Lógica de Títulos
+        const currentMonthName = months_es[viewDate.getMonth()];
+        const currentYear = viewDate.getFullYear();
+        
+        const previousMonthDate = new Date(viewDate);
+        previousMonthDate.setMonth(previousMonthDate.getMonth() - 1);
+        const previousMonthName = months_es[previousMonthDate.getMonth()];
+        const previousMonthYear = previousMonthDate.getFullYear();
+
+        monthYearDisplay.textContent = `${currentMonthName} ${currentYear}`;
+        reportSubheader.textContent = `Sustentos del trabajo realizado en ${previousMonthName} ${previousMonthYear}`;
+        
+        if (isCurrentMonth) {
+            taskListContainer.classList.remove('analysis-mode');
+            returnCurrentBtn.classList.add('hidden');
+            nextMonthBtn.disabled = true;
+        } else {
+            taskListContainer.classList.add('analysis-mode');
+            returnCurrentBtn.classList.remove('hidden');
+            nextMonthBtn.disabled = false;
+        }
+
+        taskList.innerHTML = '';
+        if (tasks.length === 0) {
+            taskList.innerHTML = `<div id="empty-state" class="text-center py-8"><i class="fas fa-clipboard-list fa-3x text-gray-300"></i><p class="mt-4 text-gray-500">No hay actividades para este mes.</p></div>`;
+        } else {
+            tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = `task-item flex items-center justify-between p-4 border rounded-lg transition ${task.completed ? 'completed' : ''}`;
+                taskElement.dataset.id = task.id;
+
+                let sustentoButtonHTML = '';
+                if (task.sustento) {
+                    sustentoButtonHTML = `<a href="${task.sustento}" target="_blank" class="sustento-btn text-sm font-semibold py-1 px-3 rounded-full" style="background-color: #d4edda; color: #155724;">
+                                            <i class="fas fa-check-circle mr-1"></i> Ver Sustento
+                                          </a>`;
+                } else {
+                    sustentoButtonHTML = `<button data-task-id="${task.id}" class="sustento-btn add-sustento-btn text-sm font-semibold py-1 px-3 rounded-full" style="background-color: var(--color-accent-gold); color: white;">
+                                            <i class="fas fa-plus-circle mr-1"></i> Añadir Sustento
+                                          </button>`;
+                }
+
+                taskElement.innerHTML = `
+                    <div class="flex items-center flex-grow">
+                        <div class="w-6 text-center">
+                            <i class="fas ${task.completed ? 'fa-check-circle' : 'fa-circle'}" style="color: ${task.completed ? 'var(--color-accent-gold)' : '#e0e0e0'}; font-size: 1.25rem;"></i>
+                        </div>
+                        <div class="ml-3 flex-grow">
+                            <p class="task-text font-medium">${task.text}</p>
+                            <p class="text-sm text-gray-500">Responsable: ${task.responsable}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        ${sustentoButtonHTML}
+                    </div>`;
+                taskList.appendChild(taskElement);
+            });
+        }
+        updateStats();
+    };
+
+    const updateStats = () => {
+        const totalTasks = tasks.length;
+        const completedTasks = tasks.filter(task => task.completed).length;
+        const pendingTasks = totalTasks - completedTasks;
+        const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+        totalTasksDisplay.textContent = totalTasks;
+        completedTasksDisplay.textContent = completedTasks;
+        pendingTasksDisplay.textContent = pendingTasks;
+        percentageDisplay.textContent = `${percentage}%`;
+        progressBar.style.width = `${percentage}%`;
+    };
+
+    // --- MANEJO DE EVENTOS ---
+
+    taskList.addEventListener('click', (e) => {
+        if (e.target.matches('.add-sustento-btn')) {
+            currentTaskIdForSustento = Number(e.target.dataset.taskId);
+            sustentoUrlInput.value = '';
+            sustentoModal.classList.remove('hidden');
+            sustentoUrlInput.focus();
+        }
+    });
+
+    const closeModal = () => {
+        sustentoModal.classList.add('hidden');
+        currentTaskIdForSustento = null;
+    };
+
+    saveSustentoBtn.addEventListener('click', () => {
+        const url = sustentoUrlInput.value.trim();
+        if (url && currentTaskIdForSustento !== null) {
+            try {
+                new URL(url);
+                const task = tasks.find(t => t.id === currentTaskIdForSustento);
+                if (task) {
+                    task.sustento = url;
+                    task.completed = true; 
+                    saveTasks();
+                    render();
+                    closeModal();
+                }
+            } catch (_) {
+                const tempAlert = document.createElement('div');
+                tempAlert.textContent = "Por favor, introduce una URL válida (ej: https://ejemplo.com)";
+                tempAlert.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);background-color:red;color:white;padding:10px;border-radius:5px;z-index:1000;";
+                document.body.appendChild(tempAlert);
+                setTimeout(() => tempAlert.remove(), 3000);
+            }
+        }
+    });
+
+    cancelSustentoBtn.addEventListener('click', closeModal);
+
+    prevMonthBtn.addEventListener('click', () => {
+        viewDate.setMonth(viewDate.getMonth() - 1);
+        render();
+    });
+
+    nextMonthBtn.addEventListener('click', () => {
+        viewDate.setMonth(viewDate.getMonth() + 1);
+        render();
+    });
+    
+    returnCurrentBtn.addEventListener('click', () => {
+        viewDate = new Date();
+        render();
+    });
+
+    render();
+});
